@@ -13,7 +13,6 @@ from pathlib import Path
 from subprocess import CalledProcessError
 from typing import TYPE_CHECKING
 
-import tomlkit
 import virtualenv
 
 from cleo.io.null_io import NullIO
@@ -39,6 +38,8 @@ from poetry.utils.helpers import remove_directory
 
 
 if TYPE_CHECKING:
+    from typing import Any
+
     from cleo.io.io import IO
 
     from poetry.poetry import Poetry
@@ -92,7 +93,7 @@ class EnvManager:
 
     ENVS_FILE = "envs.toml"
 
-    def __init__(self, poetry: Poetry, io: None | IO = None) -> None:
+    def __init__(self, poetry: Poetry, io: IO | None = None) -> None:
         self._poetry = poetry
         self._io = io or NullIO()
 
@@ -137,7 +138,7 @@ class EnvManager:
 
             return self.get(reload=True)
 
-        envs = tomlkit.document()
+        envs: dict[str, Any] = {}
         if self.envs_file.exists():
             envs = self.envs_file.read()
             current_env = envs.get(self.base_env_name)
@@ -568,7 +569,7 @@ class EnvManager:
 
         cli_result = virtualenv.cli_run(args, setup_logging=False)
 
-        # Exclude the venv folder from from macOS Time Machine backups
+        # Exclude the venv folder from macOS Time Machine backups
         # TODO: Add backup-ignore markers for other platforms too
         if sys.platform == "darwin":
             import xattr
@@ -590,7 +591,7 @@ class EnvManager:
         except OSError as e:
             # Continue only if e.errno == 16
             if e.errno != 16:  # ERRNO 16: Device or resource busy
-                raise e
+                raise
 
         # Delete all files and folders but the toplevel one. This is because sometimes
         # the venv folder is mounted by the OS, such as in a docker volume. In such
